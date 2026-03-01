@@ -1,0 +1,51 @@
+name: Generate NVS Provision Binary
+
+on:
+  workflow_dispatch:
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.4
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate NVS binary
+        env:
+          WIFI_SSID:   ${{ secrets.WIFI_SSID }}
+          WIFI_PASS:   ${{ secrets.WIFI_PASS }}
+          LLM_BACKEND: ${{ secrets.LLM_BACKEND }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL:   ${{ secrets.LLM_MODEL }}
+          TG_TOKEN:    ${{ secrets.TG_TOKEN }}
+          TG_CHAT_ID:  ${{ secrets.TG_CHAT_ID }}
+        run: |
+          . "$IDF_PATH/export.sh"
+
+          cat > /tmp/nvs.csv << EOF
+          key,type,encoding,value
+          zclaw,namespace,,
+          wifi_ssid,data,string,${WIFI_SSID}
+          wifi_pass,data,string,${WIFI_PASS}
+          llm_backend,data,string,${LLM_BACKEND}
+          api_key,data,string,${LLM_API_KEY}
+          llm_model,data,string,${LLM_MODEL}
+          tg_token,data,string,${TG_TOKEN}
+          tg_chat_id,data,string,${TG_CHAT_ID}
+          tg_chat_ids,data,string,${TG_CHAT_ID}
+          EOF
+
+          python "$IDF_PATH/components/nvs_flash/nvs_partition_generator/nvs_partition_gen.py" \
+            generate /tmp/nvs.csv /tmp/nvs.bin 0x4000
+
+          cp /tmp/nvs.bin nvs.bin
+
+      - name: Upload NVS binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: nvs-provision
+          path: nvs.bin
+          retention-days: 7
