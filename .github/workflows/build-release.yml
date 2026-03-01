@@ -31,6 +31,7 @@ jobs:
           cp build-esp32/zclaw.bin                              release-files/
           cp build-esp32/bootloader/bootloader.bin              release-files/
           cp build-esp32/partition_table/partition-table.bin    release-files/
+          cp build-esp32/ota_data_initial.bin                   release-files/
           cp build-esp32/flash_args                             release-files/
 
       - name: Create Release and Upload Firmware
@@ -42,6 +43,7 @@ jobs:
             release-files/zclaw.bin
             release-files/bootloader.bin
             release-files/partition-table.bin
+            release-files/ota_data_initial.bin
             release-files/flash_args
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
